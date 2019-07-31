@@ -26,7 +26,7 @@ def task_send_remember():
         _minutes = tdelta.total_seconds() / 60
         minutes = abs(round(_minutes))
 
-        if(minutes == 2):
+        if(minutes == 10):
             send_mail(
                 'Bildiriş',
                 ''+ task.title +' bitməsinə 10 dəqiqə qalıb',
