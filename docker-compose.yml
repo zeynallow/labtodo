@@ -1,0 +1,47 @@
+version: "3"
+services:
+  # PostgreSQL
+  db:
+    image: postgres
+  # Redis
+  redis:
+    image: redis:2.8.19
+    hostname: redis
+    ports:
+      - "6379:6379"
+  # Django
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    hostname: web
+    command: python ./manage.py runserver 0.0.0.0:8000
+    volumes:
+      # Mount src to app
+      - ./src:/app
+    expose:
+      - "8000"
+    depends_on:
+      - db
+    restart: always
+  # Celery Worker
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A labtodo worker -l info
+    volumes:
+      - ./src:/app
+    depends_on:
+      - redis
+  # Celery Beat  
+  beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A labtodo beat -l info
+    volumes:
+      - ./src:/app
+    depends_on:
+      - redis
+    

@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} LabTodo {% endblock %}
+
+{% block content %}
+
+<main class="profile-page">
+  <section class="section-profile-cover section-shaped my-0">
+    <!-- Circles background -->
+    <div class="shape shape-style-1 shape-primary alpha-4">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <!-- SVG separator -->
+    <div class="separator separator-bottom separator-skew">
+      <svg x="0" y="0" viewBox="0 0 2560 100" preserveAspectRatio="none" version="1.1" xmlns="http://www.w3.org/2000/svg">
+        <polygon class="fill-white" points="2560 0 2560 100 0 100"></polygon>
+      </svg>
+    </div>
+  </section>
+  <section class="section">
+    <div class="container">
+      <div class="card card-profile shadow mt--300">
+        <div class="px-4">
+
+          {% include "includes/header.html" %}
+
+          <div class="text-center mt-5">
+            <h3>Tapşırıqlarım</h3>
+          </div>
+
+          <div class="mt-5 py-5 border-top">
+
+            {% if todos|length < 1 %}
+
+            <div class="alert alert-warning" style="width:100%">
+              Sizin tapşırıqlarınız yoxdur
+            </div>
+
+            {% else %}
+
+            {% for todo in todos %}
+
+            <div class="row" style="padding:10px;" id="task_{{todo.id}}">
+              <div class="col-lg-12">
+                <div class="card shadow">
+                  <div class="card-body">
+                    <div class="d-flex px-3">
+                      {% if todo.complete %}
+                      <div class="text-center">
+                        <div class="icon icon-shape bg-gradient-success rounded-circle text-white">
+                          <i class="ni ni-satisfied"></i>
+                        </div>
+                        <a href="#" class="text-success">Tamamlanmış</a>
+                      </div>
+                      {% else %}
+                      <div class="text-center">
+                        <div class="icon icon-shape bg-gradient-warning rounded-circle text-white">
+                          <i class="ni ni-satisfied"></i>
+                        </div>
+                        <a href="#" class="text-warning">Tamamlanmamış</a>
+                      </div>
+                      {% endif %}
+                      <div class="pl-4">
+                        <a href="{% url 'view' todo.id %}">
+                          <h5 class="title {{ todo.complete|yesno:'text-success,text-warning' }}">{{ todo.title }}</h5>
+                        </a>
+                        <p>{{ todo.description }}</p>
+                        <small>{{ todo.created|date:"d-m-Y"}} - {{ todo.due_date|date:"d-m-Y"}}</small>
+
+                        {% if todo.complete == False %}
+                        <button type="button" onclick="taskComplete({{todo.id}})" class="btn btn-sm btn-info mr-4"><i class="fa fa-check"></i> Tamamla</button>
+                        {% endif %}
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {% endfor %}
+
+            {% endif %}
+
+          </div>
+
+          {% if shared_todos|length > 0 %}
+
+          <div class="text-center mt-5">
+            <h3>Paylaşılan tapşırıqlar</h3>
+          </div>
+
+          <div class="mt-5 py-5 border-top">
+
+
+
+            {% for todo in shared_todos %}
+
+            <div class="row" style="padding:10px;">
+              <div class="col-lg-12">
+                <div class="card shadow">
+                  <div class="card-body">
+                    <div class="d-flex px-3">
+                      {% if todo.task.complete %}
+                      <div class="text-center">
+                        <div class="icon icon-shape bg-gradient-success rounded-circle text-white">
+                          <i class="ni ni-satisfied"></i>
+                        </div>
+                        <a href="#" class="text-success">Tamamlanmış</a>
+                      </div>
+                      {% else %}
+                      <div class="text-center">
+                        <div class="icon icon-shape bg-gradient-warning rounded-circle text-white">
+                          <i class="ni ni-satisfied"></i>
+                        </div>
+                        <a href="#" class="text-warning">Tamamlanmamış</a>
+                      </div>
+                      {% endif %}
+                      <div class="pl-4">
+                        <a href="{% url 'view' todo.task.id %}">
+                          <h5 class="title {{ todo.task.complete|yesno:'text-success,text-warning' }}">{{ todo.task.title }}</h5>
+                        </a>
+                        <p>{{ todo.task.description }}</p>
+                        <small>{{ todo.task.created|date:"d-m-Y"}} - {{ todo.task.due_date|date:"d-m-Y" }}</small>
+
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {% endfor %}
+
+
+
+          </div>
+
+          {% endif %}
+
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  {% include "includes/create_new_modals.html" %}
+
+</main>
+
+
+<script type="text/javascript">
+  function taskComplete(task_id){
+    $.ajax({
+      url:'/task/changeStatus/',
+      method:'POST',
+      data: {
+        csrfmiddlewaretoken: '{{ csrf_token }}',
+        task_id: task_id,
+        status:1
+      },
+      success:function(response){
+        if(response.message == "success"){
+          location.reload();
+        }else{
+          alert("Səhv baş verdi");
+        }
+      }
+    })
+  }
+</script>
+
+{% endblock %}

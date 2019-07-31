@@ -1,0 +1,375 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} LabTodo {% endblock %}
+
+{% block content %}
+<style media="screen">
+  .delete_comment {
+    float: right;
+    color: #ca1616;
+  }
+  .edit_comment {
+    float: right;
+    color: #000;
+  }
+  .edit_comment_input{
+    position: absolute;
+    left: 5px;
+    width: 100%;
+  }
+  .confirm_edit {
+    position: absolute;
+    right: 0px;
+  }
+</style>
+<main class="profile-page">
+  <section class="section-profile-cover section-shaped my-0">
+    <!-- Circles background -->
+    <div class="shape shape-style-1 shape-primary alpha-4">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <!-- SVG separator -->
+    <div class="separator separator-bottom separator-skew">
+      <svg x="0" y="0" viewBox="0 0 2560 100" preserveAspectRatio="none" version="1.1" xmlns="http://www.w3.org/2000/svg">
+        <polygon class="fill-white" points="2560 0 2560 100 0 100"></polygon>
+      </svg>
+    </div>
+  </section>
+  <section class="section">
+    <div class="container">
+      <div class="card card-profile shadow mt--300">
+        <div class="px-4">
+
+          {% include "includes/header.html" %}
+
+          <div class="text-center mt-5">
+            <h3>{{ todo.title }}</h3>
+          </div>
+
+          <div class="mt-5 py-5 border-top">
+
+
+            <div class="row">
+              <div class="col-lg-12">
+                <div class="card shadow">
+                  <div class="card-body">
+                    <div class="d-flex px-3">
+                      {% if todo.complete %}
+                      <div class="text-center">
+                        <div class="icon icon-shape bg-gradient-success rounded-circle text-white">
+                          <i class="ni ni-satisfied"></i>
+                        </div>
+                        <a href="#" class="text-success">Tamamlanmış</a>
+                      </div>
+                      {% else %}
+                      <div class="text-center">
+                        <div class="icon icon-shape bg-gradient-warning rounded-circle text-white">
+                          <i class="ni ni-satisfied"></i>
+                        </div>
+                        <a href="#" class="text-warning">Tamamlanmamış</a>
+                      </div>
+                      {% endif %}
+                      <div class="pl-4">
+                        <p>{{ todo.description }}</p>
+                        <small>{{ todo.created|date:"d-m-Y"}} - {{ todo.due_date|date:"d-m-Y"}}</small>
+
+                        {% if todo.complete == False and user.id == todo.user_id %}
+                        <button type="button" onclick="taskComplete({{todo.id}})" class="btn btn-sm btn-info mr-4"><i class="fa fa-check"></i> Tamamla</button>
+                        {% endif %}
+
+                        <button type="button" data-toggle="modal" data-target="#modal-share" class="btn btn-sm btn-success mr-4"><i class="fa fa-share"></i> Paylaş</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {% if show_comment %}
+            <br/>
+            <h3>Şərhlər</h3>
+
+            <div class="row" id="task_comments">
+              {% for t_comment in comments %}
+              <div class="col-lg-12" style="padding:10px;" id="comment_{{ t_comment.id }}">
+                <div class="card shadow">
+                  <div class="card-body">
+                    <div class="comment">
+                      <b>{{ t_comment.user.username }}: </b>
+
+                      <span id="comment_{{ t_comment.id }}_message">{{ t_comment.comment }}</span>
+
+                      {% if t_comment.user.id == user.id %}
+                      <div class="delete_comment" onclick="deleteComment({{ t_comment.id }})"><i class="fa fa-trash-o"></i></div>
+                      <div class="edit_comment" onclick="editComment({{ t_comment.id }})"><i class="fa fa-edit"></i></div>
+                      {% elif todo.user_id == user.id %}
+                      <div class="delete_comment" onclick="deleteComment({{ t_comment.id }})"><i class="fa fa-trash-o"></i></div>
+                      {% endif %}
+
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            <br/>
+
+            <div class="">
+
+              <div class="col-lg-12">
+                <div class="card shadow">
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-md-10">
+                        <input id="comment-message-input" placeholder="Şərh əlavə edin" class="form-control" type="text"/>
+                      </div>
+                      <div class="col-md-2">
+                        <button class="btn btn-success" type="button" id="comment-message-submit">Send</button>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <br/>
+
+
+
+            <script>
+
+              //add comment
+              function add_comment(user,edit_access,delete_access,message,comment_id) {
+
+                var delete_comment_snippet = "";
+                var edit_comment_snippet = "";
+
+                if(edit_access == 1){
+                  var edit_comment_snippet = '<div class="edit_comment" onclick="editComment('+comment_id+')"><i class="fa fa-edit"></i></div>';
+                }
+
+                if(delete_access == 1){
+                  var delete_comment_snippet = '<div class="delete_comment" onclick="deleteComment('+comment_id+')"><i class="fa fa-trash-o"></i></div>';
+                }
+
+                var snippet = '<div class="col-lg-12" style="padding:10px;" id="comment_'+comment_id+'">\
+                  <div class="card shadow">\
+                    <div class="card-body">\
+                      <div class="comment">\
+                        <b>'+ user + ': </b>\
+                        <span id="comment_'+ comment_id +'_message">'+ message + '</span>\
+                        '+ edit_comment_snippet +'\
+                        '+ delete_comment_snippet +'\
+                      </div>\
+                    </div>\
+                  </div>\
+                </div>';
+                var comment_div = document.getElementById("task_comments");
+                var newcomment = document.createElement('div');
+                newcomment.innerHTML = snippet;
+
+                while (newcomment.firstChild) {
+                  comment_div.appendChild(newcomment.firstChild);
+                }
+              }
+
+
+              var taskID = {{ todo.id }};
+
+              var commentSocket = new WebSocket(
+              'ws://' + window.location.host +
+              '/ws/comment/' + taskID + '/');
+
+              commentSocket.onmessage = function(e) {
+                var data = JSON.parse(e.data);
+                var message = data['message'];
+                var c_user = data['user'];
+                var comment_id = data['comment_id'];
+                var type = data['type'];
+
+                var task_owner = "{{todo.user_id}}";
+                var auth_username = "{{user.username}}";
+                var auth_user_id = "{{user.id}}";
+
+                var edit_access = 0;
+                var delete_access = 0;
+
+                if (task_owner == auth_user_id && c_user == auth_username){
+                  edit_access = 1;
+                  delete_access = 1;
+                }else if(task_owner == auth_user_id && c_user != auth_username){
+                  edit_access = 0;
+                  delete_access = 1;
+                }else if(task_owner != auth_user_id && c_user == auth_username){
+                  edit_access = 1;
+                  delete_access = 1;
+                }
+
+                if(type == 'comment_message'){
+                  add_comment(c_user,edit_access,delete_access,message,comment_id);
+                }else if(type == 'delete_comment'){
+                  $("#comment_"+comment_id).remove();
+                }else if(type == 'edit_comment'){
+                  console.log(message);
+                  $('#comment_'+ comment_id +'_message').empty().html(message); //change message
+                }
+
+              };
+
+              commentSocket.onclose = function(e) {
+                console.error('Comment socket closed unexpectedly');
+              };
+
+              document.querySelector('#comment-message-input').focus();
+              document.querySelector('#comment-message-input').onkeyup = function(e) {
+                if (e.keyCode === 13) {  // enter, return
+                  document.querySelector('#comment-message-submit').click();
+                }
+              };
+
+              //send comment
+              document.querySelector('#comment-message-submit').onclick = function(e) {
+                var messageInputDom = document.querySelector('#comment-message-input');
+                var message = messageInputDom.value;
+                commentSocket.send(JSON.stringify({
+                  'type':'comment_message',
+                  'message': message,
+                  'user':'{{user.id}}'
+                }));
+                messageInputDom.value = '';
+              };
+
+              //delete comment
+              function deleteComment(comment_id){
+                commentSocket.send(JSON.stringify({
+                  'type':'delete_comment',
+                  'comment_id': comment_id
+                }));
+                $("#comment_"+comment_id).remove();
+              }
+
+              //edit comment
+              function editComment(comment_id){
+                var getComment = $("#comment_"+comment_id+"_message").html();
+                var edit_snippet = '<span id="edit_comment_'+comment_id+'_form"><input type="text" value="'+ getComment +'" id="i_comment_'+comment_id+'_message" class="edit_comment_input"/>\
+                  <span onclick="confirmEditComment('+comment_id+')" class="confirm_edit btn btn-info btn-sm"><i class="fa fa-check"></i> Dəyişdir</span></span>';
+
+                  $("#comment_"+comment_id+"_message").append(edit_snippet);
+                }
+
+                function confirmEditComment(comment_id){
+                  var comment = $('#i_comment_'+comment_id+'_message').val();
+                  commentSocket.send(JSON.stringify({
+                    'type':'edit_comment',
+                    'comment_id': comment_id,
+                    'edited_comment':comment
+                  }));
+
+                  $('#edit_comment_'+comment_id+'_form').remove();
+                }
+
+
+
+              </script>
+              {% endif %}
+
+            </div>
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {% include "includes/create_new_modals.html" %}
+
+    <div class="modal fade" id="modal-share" tabindex="-1" role="dialog" aria-labelledby="modal-share" aria-hidden="true">
+      <div class="modal-dialog modal- modal-dialog-centered modal-" role="document">
+        <div class="modal-content">
+
+          <form class="" action="" onsubmit="shareTask(this)" method="post">
+            {% csrf_token %}
+            <div class="modal-header">
+              <h6 class="modal-title" id="modal-title-default">Tapşırığı paylaş</h6>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
+            <div class="modal-body">
+
+              <div class="row">
+                <div class="col-md-12">
+                  <label for="shared_user">Email və ya İstifadəçi adı</label>
+                  <input type="text" class="form-control" id="shared_user" name="shared_user" value="">
+                </div>
+              </div>
+              <br/>
+              <div class="row">
+                <div class="col-md-6">
+                  Şərh yazmaq
+                </div>
+                <div class="col-md-6">
+                  <label class="custom-toggle">
+                    <input type="checkbox" name="share_type" value="1" checked="">
+                    <span class="custom-toggle-slider rounded-circle"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <input type="hidden" name="task_id" value="{{ todo.id }}">
+              <button type="submit" class="btn btn-primary">Paylaş</button>
+              <button type="button" class="btn btn-link  ml-auto" data-dismiss="modal">İmtina et</button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+
+
+  </main>
+
+  <script type="text/javascript">
+    function taskComplete(task_id){
+      $.ajax({
+        url:'/task/changeStatus/',
+        method:'POST',
+        data: {
+          csrfmiddlewaretoken: '{{ csrf_token }}',
+          task_id: task_id,
+          status:1
+        },
+        success:function(response){
+          if(response.message == "success"){
+            location.reload();
+          }else{
+            alert("Səhv baş verdi");
+          }
+        }
+      });
+    }
+
+    function shareTask(obj){
+      $.ajax({
+        url:'/task/share/',
+        method:'POST',
+        data: $(obj).serialize(),
+        success:function(response){
+          alert(response.message);
+        }
+      });
+      return false;
+    }
+
+  </script>
+
+  {% endblock %}

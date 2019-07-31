@@ -1,0 +1,22 @@
+<div class="row justify-content-center">
+  <div class="col-lg-6 order-lg-3 text-lg-right align-self-lg-center">
+    <div class="card-profile-actions py-4 mt-lg-0">
+
+      <a href="{% url 'index' %}"  class="btn btn-sm btn-info mr-4"><i class="fa fa-tasks"></i> Bütün tapşırıqlar</a>
+
+      <a href="#" data-toggle="modal" data-target="#modal-default" class="btn btn-sm btn-info mr-4"><i class="fa fa-plus"></i> Yeni tapşırıq</a>
+
+      {% if user.is_authenticated %}
+      <div class="dropdown">
+        <a href="#" class="btn btn-sm btn-default" data-toggle="dropdown" role="button">
+          <span class="nav-link-inner--text"><i class="fa fa-user"></i>  {{ user.username }}</span>
+        </a>
+        <div class="dropdown-menu">
+          <a href="{% url 'logout' %}"  class="dropdown-item">logout</a>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
