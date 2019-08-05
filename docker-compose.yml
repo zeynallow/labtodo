@@ -15,10 +15,11 @@ services:
       context: .
       dockerfile: Dockerfile
     hostname: web
-    command: python ./manage.py runserver 0.0.0.0:8000
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      # Mount src to app
-      - ./src:/app
+      - ./:/app/
+    ports:
+      - "8000:8000"
     expose:
       - "8000"
     depends_on:
@@ -31,17 +32,16 @@ services:
       dockerfile: Dockerfile
     command: celery -A labtodo worker -l info
     volumes:
-      - ./src:/app
+      - ./:/app
     depends_on:
       - redis
-  # Celery Beat  
+  # Celery Beat
   beat:
     build:
       context: .
       dockerfile: Dockerfile
     command: celery -A labtodo beat -l info
     volumes:
-      - ./src:/app
+      - ./:/app
     depends_on:
       - redis
-    

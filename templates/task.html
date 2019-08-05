@@ -77,7 +77,7 @@
                       {% endif %}
                       <div class="pl-4">
                         <p>{{ todo.description }}</p>
-                        <small>{{ todo.created|date:"d-m-Y"}} - {{ todo.due_date|date:"d-m-Y"}}</small>
+                        <small>{{ todo.created|date:"d-m-Y"}} - {{ todo.due_date}}</small>
 
                         {% if todo.complete == False and user.id == todo.user_id %}
                         <button type="button" onclick="taskComplete({{todo.id}})" class="btn btn-sm btn-info mr-4"><i class="fa fa-check"></i> Tamamla</button>
